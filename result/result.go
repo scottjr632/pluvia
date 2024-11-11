@@ -72,6 +72,16 @@ func Recover[T any](res *Result[T]) {
 	}
 }
 
+func (r Result[T]) RecoverToError(callignErr *error) {
+	if r := recover(); r != nil {
+		err, ok := r.(resultError)
+		if !ok {
+			panic(r)
+		}
+		*callignErr = err.error
+	}
+}
+
 // MustUnwrapErr returns the Err value or panics if there is no error.
 func (r Result[T]) MustUnwrapErr() error {
 	if r.err == nil {

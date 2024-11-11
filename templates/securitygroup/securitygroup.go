@@ -1,7 +1,6 @@
 package securitygroup
 
 import (
-	"github.com/pluvia/pluvia/context"
 	"github.com/pluvia/pluvia/options"
 	"github.com/pluvia/pluvia/result"
 	"github.com/pluvia/pluvia/templates"
@@ -65,8 +64,8 @@ func New(
 	return result.New(s, nil)
 }
 
-func (s *SecurityGroup) Create(ctx *context.Context) error {
-	sg, err := ec2.NewSecurityGroup(ctx.Pulumi(), s.name, &ec2.SecurityGroupArgs{
+func (s *SecurityGroup) Create(ctx *templates.ContextWithPulumi) error {
+	sg, err := ec2.NewSecurityGroup(ctx.PL, s.name, &ec2.SecurityGroupArgs{
 		Description: pulumi.String(s.description),
 		Ingress:     s.ingress,
 	})

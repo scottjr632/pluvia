@@ -18,16 +18,20 @@ func AttachWithDockerStrategy(
 		if !b.includeSSH {
 			panic("Cannot attach docker strategy without SSH")
 		}
-		return nil
+		return &dockerStrategy{b}
 	}
 }
 
 func (s *dockerStrategy) Run(ctx context.Context) error {
-	s.box.instance.PublicIp.ApplyT(func(value string) {
-		cmdErr := exec.Command("DOCKER_HOST=ssh://ec2-user@"+value, "docker", "build").Run()
+	s.box.instance.PublicIp.ApplyT(func(value string) string {
+		dockerHost := "DOCKER_HOST=ssh://ec2-user@" + value
+		ctx.Log().Debug("Building docker image on remote machine with " + dockerHost)
+
+		cmdErr := exec.Command(dockerHost, "docker", "build").Run()
 		if cmdErr != nil {
-			panic(cmdErr)
+			ctx.Log().Error("Failed to build docker image on remote machine with "+dockerHost, cmdErr.Error())
 		}
+		return value
 	})
 	return nil
 }

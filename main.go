@@ -13,17 +13,10 @@ func main() {
 		"./DOCKERFILE",
 	))
 
-	ctx := context.New(nil)
-	eng, err := engine.New(*ctx, "my-aws-project", "us-east-1")
-	if err != nil {
-		panic(err)
-	}
+	ctx := context.New()
+	eng := engine.NewWithResult(ctx, "my-aws-project", "us-east-1").Must()
 
-	if err := eng.Run(*ctx, b); err != nil {
-		panic(err)
-	}
+	eng.RunWithResult(ctx, b).Must()
 
-	if err := eng.Attach(*ctx, b); err != nil {
-		panic(err)
-	}
+	eng.AttachWithResult(ctx, b).Must()
 }

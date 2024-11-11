@@ -5,12 +5,10 @@ import (
 
 	"github.com/pluvia/pluvia/logging"
 	"github.com/pluvia/pluvia/options"
-	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
 
 type Context struct {
 	ctx context.Context
-	pl  *pulumi.Context
 	log logging.Logger
 }
 
@@ -28,13 +26,12 @@ func WithContext(ctx context.Context) options.OptionFn[*Context] {
 	}
 }
 
-func New(pl *pulumi.Context, opts ...options.OptionFn[*Context]) *Context {
-	c := &Context{
+func New(opts ...options.OptionFn[*Context]) Context {
+	c := Context{
 		ctx: context.Background(),
-		pl:  pl,
-		log: logging.NewNoopLogger(),
+		log: logging.NewBasicLogger(),
 	}
-	options.Apply(c)
+	options.Apply(&c)
 	return c
 }
 
@@ -44,14 +41,6 @@ func (c *Context) Ctx() context.Context {
 
 func (c *Context) Context() context.Context {
 	return c.ctx
-}
-
-func (c *Context) Pl() *pulumi.Context {
-	return c.pl
-}
-
-func (c *Context) Pulumi() *pulumi.Context {
-	return c.pl
 }
 
 func (c *Context) Log() logging.Logger {

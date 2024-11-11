@@ -2,9 +2,15 @@ package templates
 
 import (
 	"github.com/pluvia/pluvia/context"
+	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 
 	"github.com/pluvia/pluvia/templates/strategies"
 )
+
+type ContextWithPulumi struct {
+	context.Context
+	PL *pulumi.Context
+}
 
 type Attachable[T any] interface {
 	RunAttachable
@@ -17,5 +23,5 @@ type RunAttachable interface {
 }
 
 type Template interface {
-	Create(ctx *context.Context) error
+	Create(ctx *ContextWithPulumi) error
 }

@@ -5,6 +5,7 @@ import (
 	"github.com/pluvia/pluvia/options"
 	"github.com/pluvia/pluvia/result"
 	"github.com/pluvia/pluvia/templates"
+	cloudconfigs "github.com/pluvia/pluvia/templates/cloud-configs"
 	"github.com/pluvia/pluvia/templates/securitygroup"
 	"github.com/pluvia/pluvia/templates/strategies"
 	"github.com/pulumi/pulumi-aws/sdk/v5/go/aws/ec2"
@@ -62,7 +63,7 @@ func New(name string, ami string, instanceType string, opts ...options.OptionFn[
 	return result.New(b, nil)
 }
 
-func (b *Box) Create(ctx *context.Context) error {
+func (b *Box) Create(ctx *templates.ContextWithPulumi) error {
 	if b.sg != nil {
 		err := b.sg.Create(ctx)
 		if err != nil {
@@ -70,15 +71,17 @@ func (b *Box) Create(ctx *context.Context) error {
 		}
 	}
 
-	i, err := ec2.NewInstance(ctx.Pulumi(), b.name, &ec2.InstanceArgs{
+	ctx.Log().Debug("Creating box " + b.name)
+	cConfig := cloudconfigs.NewCloudConfigBuilder(cloudconfigs.WithDockerCloudConfig())
+
+	i, err := ec2.NewInstance(ctx.PL, b.name, &ec2.InstanceArgs{
 		InstanceType:        pulumi.String(b.instanceType),
 		Ami:                 pulumi.String(b.ami),
 		VpcSecurityGroupIds: pulumi.StringArray{b.sg.ID()},
-		// UserData: cloudInit,
+		UserData:            pulumi.String(cConfig.Build()),
 	})
 
 	b.instance = i
-
 	return err
 }
 
@@ -89,6 +92,11 @@ func (b *Box) Attach(fn strategies.StrategyFn[*Box]) error {
 
 func (b *Box) Run(ctx context.Context) error {
 	for _, a := range b.attached {
+		if a == nil {
+			ctx.Log().Error("Found nil strategy attaching to box" + b.name + ", please check strategy attachments.")
+			continue
+		}
+
 		if err := a.Run(ctx); err != nil {
 			return err
 		}
