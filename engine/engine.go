@@ -30,6 +30,9 @@ func New(
 ) (*Engine, error) {
 	setConfigPassphrase()
   
+  // This and other settings need to be read-in from an existing config file
+	// then fall back to env var, and then error out instead of dictating a default imo.
+	// It's just a bit easier for *me* to have this stored separately until then atm
 	pluviaRoot := os.Getenv("PWD")
 	localBackendURL := "file://" + pluviaRoot
 	stackName := "pluvia-demo"
