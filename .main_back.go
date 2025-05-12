@@ -71,7 +71,7 @@ func main_test() {
 	projectName := "my-aws-project"
 	stackName := "dev"
 
-	localBackendURL := "file://~/.pulumi"
+	localBackendURL := "file://./"
 	project := workspace.Project{
 		Name:    tokens.PackageName(projectName),
 		Runtime: workspace.NewProjectRuntimeInfo("go", nil),

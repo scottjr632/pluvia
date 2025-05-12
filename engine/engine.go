@@ -29,8 +29,9 @@ func New(
 	region string,
 ) (*Engine, error) {
 	setConfigPassphrase()
-
-	localBackendURL := "file://./"
+  
+	pluviaRoot := os.Getenv("PWD")
+	localBackendURL := "file://" + pluviaRoot
 	stackName := "pluvia-demo"
 
 	project := workspace.Project{
@@ -74,6 +75,7 @@ func NewWithResult(
 
 func (engine *Engine) Run(ctx context.Context, tmpls ...templates.Template) error {
 	engine.st.Workspace().SetProgram(func(pl *pulumi.Context) error {
+		// t just makes me think of tests and I hate it here lmao 
 		for _, t := range tmpls {
 			ctxWithPulumi := templates.ContextWithPulumi{Context: ctx, PL: pl}
 			if err := t.Create(&ctxWithPulumi); err != nil {

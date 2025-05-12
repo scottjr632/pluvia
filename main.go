@@ -14,7 +14,7 @@ func main() {
 	))
 
 	ctx := context.New()
-	eng := engine.NewWithResult(ctx, "my-aws-project", "us-east-1").Must()
+	eng := engine.NewWithResult(ctx, "pluvia-demo", "us-east-1").Must()
 
 	eng.RunWithResult(ctx, b).Must()
 
