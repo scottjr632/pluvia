@@ -30,8 +30,8 @@ func New(
 ) (*Engine, error) {
 	setConfigPassphrase()
 
-	localBackendURL := "file://~/.pulumi"
-	stackName := "dev"
+	localBackendURL := "file://./"
+	stackName := "pluvia-demo"
 
 	project := workspace.Project{
 		Name:    tokens.PackageName(projectName),
