@@ -17,6 +17,9 @@ type Config struct {
 	Stack struct {
 		Name string `yaml:"name"`
 	} `yaml:"stack"`
+	Backend struct {
+		Url string `yaml:"url"`
+	} `yaml:"backend"`
 }
 
 func New() (res result.Result[*Config]) {
