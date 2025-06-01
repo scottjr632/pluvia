@@ -8,6 +8,8 @@ import (
 	"github.com/pluvia/pluvia/result"
 	"github.com/pluvia/pluvia/templates"
 	"github.com/pulumi/pulumi/sdk/v3/go/auto"
+	"github.com/pulumi/pulumi/sdk/v3/go/auto/optdestroy"
+	"github.com/pulumi/pulumi/sdk/v3/go/auto/optup"
 	"github.com/pulumi/pulumi/sdk/v3/go/common/tokens"
 	"github.com/pulumi/pulumi/sdk/v3/go/common/workspace"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
@@ -88,15 +90,19 @@ func (engine *Engine) Run(ctx context.Context, tmpls ...templates.Template) erro
 		return nil
 	})
 
-	res, err := engine.st.Preview(ctx.Ctx())
-	if err != nil {
-		fmt.Printf("Failed to preview stack: %v\n", err)
-		return err
-	}
+	// res, err := engine.st.Preview(ctx.Ctx())
+	// if err != nil {
+	// 	fmt.Printf("Failed to preview stack: %v\n", err)
+	// 	return err
+	// }
 
-	fmt.Printf("Preview completed! Resources:\n%v\n", res.StdOut)
+	// fmt.Printf("Preview completed! Resources:\n%v\n", res.StdOut)
 
-	return nil
+	// pulumi.Run(engine.st.Workspace().Program())
+	_, err := engine.st.Up(ctx.Ctx(), optup.ProgressStreams(os.Stdout))
+	// fmt.Println(res.StdOut)
+
+	return err
 }
 
 func (engine *Engine) RunWithResult(ctx context.Context, tmpls ...templates.Template) result.Failable {
@@ -123,5 +129,15 @@ func (engine *Engine) Attach(ctx context.Context, strats ...templates.RunAttacha
 
 func (engine *Engine) AttachWithResult(ctx context.Context, strats ...templates.RunAttachable) result.Failable {
 	err := engine.Attach(ctx, strats...)
+	return result.NewFailable(err)
+}
+
+func (engine *Engine) Destroy(ctx context.Context) error {
+	_, err := engine.st.Destroy(ctx.Ctx(), optdestroy.ProgressStreams(os.Stdout))
+	return err
+}
+
+func (engine *Engine) DestroyWithResult(ctx context.Context) result.Failable {
+	err := engine.Destroy(ctx)
 	return result.NewFailable(err)
 }

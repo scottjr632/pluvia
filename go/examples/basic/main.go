@@ -7,7 +7,8 @@ import (
 )
 
 func main() {
-	b := box.New("cool-box", "ami-0c55b159cbfafe1f0", "t2.micro", box.WithIncludeSSH()).Must()
+	ctx := context.New()
+	b := box.New(ctx, "cool-box", "ami-067d435ee698a3ff3", "t4g.small", box.WithIncludeSSH()).Must()
 
 	b.Attach(box.AttachWithDockerStrategy(
 		"./DOCKERFILE",

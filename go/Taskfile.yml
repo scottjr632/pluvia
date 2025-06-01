@@ -1,0 +1,28 @@
+version: '3'
+
+vars:
+  BINARY_NAME: pv
+
+tasks:
+  build:
+    desc: Build the Go binary
+    cmds:
+      - go build -o ./.bin/{{.BINARY_NAME}} cmds/main.go
+
+  install:
+    desc: Install the binary to local bin
+    deps: [build]
+    cmds:
+      - cp ./.bin/{{.BINARY_NAME}} ~/.local/bin/
+      - chmod +x ~/.local/bin/{{.BINARY_NAME}}
+
+  clean:
+    desc: Clean up build artifacts
+    cmds:
+      - rm -rf ./.bin
+
+  default:
+    desc: Build and install the binary
+    deps: [install]
+
+
