@@ -1,6 +1,9 @@
 package securitygroup
 
 import (
+	"fmt"
+
+	"github.com/pluvia/pluvia/context"
 	"github.com/pluvia/pluvia/options"
 	"github.com/pluvia/pluvia/result"
 	"github.com/pluvia/pluvia/templates"
@@ -9,14 +12,16 @@ import (
 )
 
 type SecurityGroup struct {
-	name        string
-	description string
-	includeSSH  bool
-	other       []*ec2.SecurityGroupIngressArgs
+	name          string
+	description   string
+	includeSSH    bool
+	blockOutbound bool
+	other         []*ec2.SecurityGroupIngressArgs
 
 	sg *ec2.SecurityGroup
 
 	ingress ec2.SecurityGroupIngressArray
+	egress  ec2.SecurityGroupEgressArray
 
 	isCreated bool
 }
@@ -44,21 +49,44 @@ func WithOther(other ...*ec2.SecurityGroupIngressArgs) options.OptionFn[*Securit
 	}
 }
 
+func WithBlockOutbound() options.OptionFn[*SecurityGroup] {
+	return func(s *SecurityGroup) *SecurityGroup {
+		s.blockOutbound = true
+		return s
+	}
+}
+
 func New(
+	ctx context.Context,
 	name string,
+	description string,
 	opts ...options.OptionFn[*SecurityGroup]) (res result.Result[*SecurityGroup]) {
 
-	s := &SecurityGroup{name, "", false, []*ec2.SecurityGroupIngressArgs{}, nil, nil, false}
+	s := &SecurityGroup{
+		name:          name,
+		description:   description,
+		includeSSH:    false,
+		blockOutbound: false,
+		other:         []*ec2.SecurityGroupIngressArgs{},
+		sg:            nil,
+		ingress:       nil,
+		egress:        nil,
+		isCreated:     false,
+	}
 	options.Apply(s, opts...)
 
 	if s.includeSSH {
-		s.other = append(s.other, newSSH())
+		ctx.Log().Debug("Including SSH security group")
+		s.ingress = append(s.ingress, newSSH())
 	}
 
-	var ingress ec2.SecurityGroupIngressArray
-	s.ingress = ingress
+	if !s.blockOutbound {
+		ctx.Log().Debug("Not blocking outbound traffic")
+		s.egress = append(s.egress, newOutboundRule())
+	}
+
 	for _, o := range s.other {
-		ingress = append(ingress, o)
+		s.ingress = append(s.ingress, o)
 	}
 
 	return result.New(s, nil)
@@ -68,6 +96,7 @@ func (s *SecurityGroup) Create(ctx *templates.ContextWithPulumi) error {
 	sg, err := ec2.NewSecurityGroup(ctx.PL, s.name, &ec2.SecurityGroupArgs{
 		Description: pulumi.String(s.description),
 		Ingress:     s.ingress,
+		Egress:      s.egress,
 	})
 	s.sg = sg
 
@@ -88,6 +117,16 @@ func newSSH() *ec2.SecurityGroupIngressArgs {
 		Protocol:   pulumi.String("tcp"),
 		FromPort:   pulumi.Int(22),
 		ToPort:     pulumi.Int(22),
+		CidrBlocks: pulumi.StringArray{pulumi.String("0.0.0.0/0")},
+	}
+}
+
+func newOutboundRule() *ec2.SecurityGroupEgressArgs {
+	fmt.Println("newOutboundRule")
+	return &ec2.SecurityGroupEgressArgs{
+		Protocol:   pulumi.String("-1"),
+		FromPort:   pulumi.Int(0),
+		ToPort:     pulumi.Int(0),
 		CidrBlocks: pulumi.StringArray{pulumi.String("0.0.0.0/0")},
 	}
 }

@@ -32,7 +32,20 @@ func (b *CloudConfigBuilder) Add(piece CloudConfigPiece) {
 func (b *CloudConfigBuilder) addPackages(builder *strings.Builder) {
 	currPackages := utils.NewSet[string]()
 
+	hasPackages := false
+	for _, pc := range b.pieces {
+		if len(pc.Packages()) > 0 {
+			hasPackages = true
+			break
+		}
+	}
+
+	if !hasPackages {
+		return
+	}
+
 	builder.WriteString("packages:\n")
+
 	for i, pc := range b.pieces {
 		builder.WriteString(indent + "# " + pc.Name() + "\n")
 		for _, pkg := range pc.Packages() {

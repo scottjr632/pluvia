@@ -1,6 +1,7 @@
 package box
 
 import (
+	"fmt"
 	"os/exec"
 
 	"github.com/pluvia/pluvia/context"
@@ -23,7 +24,14 @@ func AttachWithDockerStrategy(
 }
 
 func (s *dockerStrategy) Run(ctx context.Context) error {
+	s.box.instance.PublicIp.ToStringOutput().ApplyT(func(value string) string {
+		fmt.Printf("running cool thing %s\n", value)
+		return value
+	})
+
+	fmt.Printf("output %v\n", s.box.instance.PublicIp.ToOutput(ctx.Ctx()))
 	s.box.instance.PublicIp.ApplyT(func(value string) string {
+		fmt.Printf("running cool thing")
 		dockerHost := "DOCKER_HOST=ssh://ec2-user@" + value
 		ctx.Log().Debug("Building docker image on remote machine with " + dockerHost)
 

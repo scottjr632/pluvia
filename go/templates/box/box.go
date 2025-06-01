@@ -1,6 +1,8 @@
 package box
 
 import (
+	"fmt"
+
 	"github.com/pluvia/pluvia/context"
 	"github.com/pluvia/pluvia/options"
 	"github.com/pluvia/pluvia/result"
@@ -47,18 +49,20 @@ func WithSecurityGroup(sg *securitygroup.SecurityGroup) options.OptionFn[*Box] {
 	}
 }
 
-func New(name string, ami string, instanceType string, opts ...options.OptionFn[*Box]) (res result.Result[*Box]) {
+func New(ctx context.Context, name string, ami string, instanceType string, opts ...options.OptionFn[*Box]) (res result.Result[*Box]) {
 	defer result.Recover(&res)
 
 	b := &Box{name, instanceType, ami, false, false, nil, nil, []strategies.Strategy{}}
 	options.Apply(b, opts...)
 
 	if b.includeSSH && b.sg == nil {
-		sg := securitygroup.New(name+"-security-group", securitygroup.WithSSH()).Must()
+		sg := securitygroup.New(ctx, name+"-security-group", "SSH security group", securitygroup.WithSSH()).Must()
 		b.sg = sg
 	} else if b.includeSSH && b.sg != nil {
 		panic("Cannot include SSH and specify a security group")
 	}
+
+	fmt.Println(">?>>> b.sg", b.sg)
 
 	return result.New(b, nil)
 }
@@ -72,7 +76,8 @@ func (b *Box) Create(ctx *templates.ContextWithPulumi) error {
 	}
 
 	ctx.Log().Debug("Creating box " + b.name)
-	cConfig := cloudconfigs.NewCloudConfigBuilder(cloudconfigs.WithDockerCloudConfig())
+	cConfig := cloudconfigs.NewCloudConfigBuilder(cloudconfigs.WithDockerCloudConfig(cloudconfigs.DockerConfigTypeAmzLnx))
+	ctx.Log().Debug("Building cloud config", cConfig.Build())
 
 	i, err := ec2.NewInstance(ctx.PL, b.name, &ec2.InstanceArgs{
 		InstanceType:        pulumi.String(b.instanceType),
@@ -80,6 +85,15 @@ func (b *Box) Create(ctx *templates.ContextWithPulumi) error {
 		VpcSecurityGroupIds: pulumi.StringArray{b.sg.ID()},
 		UserData:            pulumi.String(cConfig.Build()),
 	})
+
+	ctx.PL.Export("instancePublicIp", i.PublicIp)
+
+	i.PublicIp.ApplyT(func(value string) string {
+		fmt.Printf("IP Address of name: %s %s\n", b.name, value)
+		return value
+	})
+
+	fmt.Printf("output %v\n", i.PublicIp.ToOutput(ctx.Ctx()))
 
 	b.instance = i
 	return err

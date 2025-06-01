@@ -1,20 +1,20 @@
 package cloudconfigs
 
-type DockerCloudConfig struct{}
+type DockerCloudConfigUbuntu struct{}
 
-func WithDockerCloudConfig() *DockerCloudConfig {
-	return &DockerCloudConfig{}
+func WithDockerCloudConfigUbuntu() *DockerCloudConfigUbuntu {
+	return &DockerCloudConfigUbuntu{}
 }
 
-func (d *DockerCloudConfig) Name() string {
+func (d *DockerCloudConfigUbuntu) Name() string {
 	return "docker"
 }
 
-func (d *DockerCloudConfig) Packages() []string {
+func (d *DockerCloudConfigUbuntu) Packages() []string {
 	return []string{"apt-transport-https", "ca-certificates", "curl", "software-properties-common"}
 }
 
-func (d *DockerCloudConfig) RunCmds() []string {
+func (d *DockerCloudConfigUbuntu) RunCmds() []string {
 	return []string{
 		"curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -",
 		"sudo add-apt-repository \"deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable\"",
@@ -25,4 +25,4 @@ func (d *DockerCloudConfig) RunCmds() []string {
 	}
 }
 
-var _ CloudConfigPiece = (*DockerCloudConfig)(nil)
+var _ CloudConfigPiece = (*DockerCloudConfigUbuntu)(nil)
