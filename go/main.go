@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/pluvia/pluvia/cmds/initcmd"
+	"github.com/pluvia/pluvia/cmd/init"
 	"github.com/urfave/cli/v3"
 )
 
