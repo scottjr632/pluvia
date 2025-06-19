@@ -1,28 +1,28 @@
 version: '3'
 
 vars:
-  BINARY_NAME: pv
+  BINARY_NAME: pluvia
+  GOPATH:
+    sh: echo $GOPATH/bin
 
 tasks:
   build:
     desc: Build the Go binary
     cmds:
-      - go build -o ./.bin/{{.BINARY_NAME}} cmds/main.go
+      - go build -o "{{.ROOT_DIR}}/.bin/{{.BINARY_NAME}}" main.go
 
   install:
     desc: Install the binary to local bin
     deps: [build]
     cmds:
-      - cp ./.bin/{{.BINARY_NAME}} ~/.local/bin/
-      - chmod +x ~/.local/bin/{{.BINARY_NAME}}
+      - cp {{.ROOT_DIR}}/.bin/{{.BINARY_NAME}} {{.GOPATH}}
+      - chmod +x {{.GOPATH}}/{{.BINARY_NAME}}
 
   clean:
     desc: Clean up build artifacts
     cmds:
-      - rm -rf ./.bin
+      - rm -rf {{.ROOT_DIR}}/.bin/
 
   default:
     desc: Build and install the binary
     deps: [install]
-
-
